@@ -752,27 +752,43 @@
             const qty = document.getElementById(`qty-${index}`).value;
             const mudaVal = document.getElementById(`time-${index}`).value;
             const simuUser = prompt("Weka namba yako ya simu kutoa oda 📞:");
+
             if (!simuUser) return;
+
             const jumlaBei = parseInt(bei.replace(/[^0-9]/g, '')) * qty;
-            const maelezoYaOda = `Oda: ${qty} Sahani ya ${dish} toka ${rest}. Mteja atafuata saa ${mudaVal}. Simu: ${simuUser}`;
+            const maelezoYaOda = `Oda: ${qty} Sahani ya ${dish} toka ${rest}. Mteja atafuata saa ${mudaVal}. Simu: ${simuUser}. Jumla: Tsh ${jumlaBei}/-`;
+
+            // Onyesha mteja kuwa oda inatumwa
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Inatuma oda...";
+            btn.disabled = true;
+
             try {
                 await fetch(SCRIPT_URL, {
                     method: "POST",
-                    body: JSON.stringify({ action: "addOrder", payload: { aina: "Chakula", maelezo: maelezoYaOda } })
+                    body: JSON.stringify({
+                        action: "addOrder",
+                        payload: {
+                            aina: "Chakula",
+                            maelezo: maelezoYaOda
+                        }
+                    })
                 });
-                const nambaAdmin = "255747712469";
-                const ujumbeWA = `🍴 *ODA MPYA YA CHAKULA*\n\n` +
-                    `🥘 *Chakula:* ${dish}\n` +
-                    `🔢 *Idadi:* ${qty} Sahani\n` +
-                    `💰 *Bei:* Tsh ${bei}\n` +
-                    `💵 *Jumla:* Tsh ${jumlaBei}\n` +
-                    `🏫 *Mgahawa:* ${rest}\n` +
-                    `⏰ *Muda wa Kufuata:* ${mudaVal}\n` +
-                    `📞 *Simu ya Mteja:* ${simuUser}`;
-                window.location.href = `https://api.whatsapp.com/send?phone=${nambaAdmin}&text=${encodeURIComponent(ujumbeWA)}`;
-            } catch (error) { alert("Tatizo la mtandao, jaribu tena."); }
-        }
 
+                // Badala ya kwenda WhatsApp, tunaonyesha ujumbe wa mafanikio hapa hapa
+                alert("✅ Oda yako imepokelewa na Zepox Admin! Tunashughulikia sasa hivi.");
+
+                // Rudisha kitufe kwenye hali ya kawaida
+                btn.innerText = originalText;
+                btn.disabled = false;
+
+            } catch (error) {
+                alert("⚠️ Tatizo la mtandao, oda haijafika. Jaribu tena.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
         // 5. Utilities & Comments System Fixed
         async function submitComment(target) {
             const name = document.getElementById('c_name').value;
