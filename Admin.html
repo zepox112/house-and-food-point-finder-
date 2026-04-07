@@ -5,11 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zepox Admin Center</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --green: #22c55e;
             --yellow: #eab308;
             --bg: #052e16;
+            --red: #ef4444;
         }
 
         body {
@@ -118,7 +120,7 @@
         }
 
         .badge {
-            background: red;
+            background: var(--red);
             padding: 2px 7px;
             border-radius: 50%;
             font-size: 11px;
@@ -128,6 +130,27 @@
             color: var(--yellow);
             border-bottom: 1px solid rgba(234, 179, 8, 0.3);
             padding-bottom: 5px;
+        }
+
+        .delete-btn {
+            background: var(--red);
+            border: none;
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .order-card {
+            position: relative;
+            margin-top: 10px;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
@@ -244,7 +267,7 @@
 
     <script>
         const IMGBB_API_KEY = "9d19a0f1d80f89446815cfbd8d40ee8c";
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrJ0bCGOBSbTJJEOpsDxrJtiKN0Hp3GoRiF_vCzyjWPuywXxdqRE8OIf7Q2pHhn_OGjg/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTcQIct17vrQ2AMgRlle9v6bHDy0H3x3r2pEcrHMXbPJM3Hai6K9Y7Z665TXlCJkmp/exec";
         let lastC = 0;
 
         // Core Functions
@@ -298,7 +321,7 @@
                 document.getElementById('rn').value, document.getElementById('rp').value,
                 document.getElementById('ru').value || "200m", document.getElementById('rt').value,
                 document.getElementById('rc').value, document.getElementById('rs').value,
-                imgs[0], imgs[1], imgs[2], imgs[3], "5" // Default rating
+                imgs[0], imgs[1], imgs[2], imgs[3], "5"
             ];
             await callZepoxAPI("addData", { sheetName: "Rooms", dataArray: dataArray });
             alert("Nyumba Imehifadhiwa!"); location.reload();
@@ -334,16 +357,12 @@
             alert("Chakula Kimeongezwa!"); location.reload();
         }
 
-        // MAREKEBISHO: updateAd sasa inatumia mfumo wa Slot ulioboreshwa
         async function saveAd() {
             const b = document.getElementById('sb4');
             const fileInput = document.getElementById('adImg');
             const slot = document.getElementById('adSlot').value;
-
             if (!fileInput.files[0]) { alert("Chagua picha ya tangazo!"); return; }
-
             b.innerText = "Inasafisha & Kupakia Slot " + slot + "..."; b.disabled = true;
-
             try {
                 const imgUrl = await up(fileInput.files[0]);
                 const payload = {
@@ -353,7 +372,6 @@
                     link: document.getElementById('adLink').value,
                     img: imgUrl
                 };
-                // Tunaita action ya "updateMatangazo" (Kama ilivyo kwenye Backend mpya)
                 await callZepoxAPI("updateMatangazo", payload);
                 alert("Tangazo la Slot " + slot + " Limebadilishwa!");
                 location.reload();
@@ -361,6 +379,18 @@
                 alert("Hitilafu imetokea!");
                 b.disabled = false;
                 b.innerText = "UPDATE TANGAZO";
+            }
+        }
+
+        // FUTA ODA
+        async function deleteOrder(id) {
+            if (!confirm("Je, unataka kufuta notification hii?")) return;
+            try {
+                await callZepoxAPI("deleteOrder", { id: id });
+                alert("Oda imefutwa!");
+                check(); // Pakia upya Inbox
+            } catch (e) {
+                alert("Imeshindwa kufuta.");
             }
         }
 
@@ -376,7 +406,6 @@
                 `<div class="list-item"><img src="${f.picha1 || f.Picha1}"><div><b>${f.jina || f.Jina}</b><br>${f.aina || f.Aina}</div></div>`
             ).join('') : "Hakuna migahawa.";
 
-            // Marekebisho ya kuonyesha matangazo yaliyopo kwenye slots
             const ads = await callZepoxAPI("getData", { sheetName: "matangazo" });
             document.getElementById('adsList').innerHTML = (ads.length > 0) ? ads.map((a, i) =>
                 `<div class="list-item"><img src="${a.photo1 || a.photo2 || a.photo3 || a.photo4 || ''}"><div><b>Slot ${i + 1}</b><br>${a.kichwa || 'Tangazo lilikosekana'}</div></div>`
@@ -390,21 +419,32 @@
             ).join('') : `<option value="">Sajili Mgahawa Kwanza</option>`;
         }
 
-        // Checker Loop
+        // Checker Loop with Delete Button
         async function check() {
             try {
                 const data = await callZepoxAPI("getData", { sheetName: "Orders" });
                 let h = ''; let n = 0;
                 if (!data || data.length === 0) {
                     document.getElementById('orderL').innerHTML = "Hakuna oda mpya.";
+                    document.getElementById('nC').innerText = 0;
                     return;
                 }
-                data.reverse().forEach(o => {
+                data.reverse().forEach((o, index) => {
                     const status = o.Status || o.status;
                     if (status === "New") n++;
-                    h += `<div class="glass" style="margin-top:10px; padding:10px; border-left: 5px solid ${status === 'New' ? '#2ecc71' : '#f1c40f'}">
-                        <b>${o.ainayaoda || o["Aina ya Oda"] || 'Oda'}</b>: ${o.maelezo || o.Maelezo}<br>
-                        <small style="opacity:0.7">${o.timestamp || o.Timestamp} | Status: ${status}</small>
+                    // Tunatumia index kama ID ya muda ya kufuta (au row number)
+                    const rowId = data.length - index;
+
+                    h += `<div class="order-card" style="border-left: 5px solid ${status === 'New' ? '#2ecc71' : '#f1c40f'}">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div>
+                                <b>${o.ainayaoda || o["Aina ya Oda"] || 'Oda'}</b>: ${o.maelezo || o.Maelezo}<br>
+                                <small style="opacity:0.7">${o.timestamp || o.Timestamp} | Status: ${status}</small>
+                            </div>
+                            <button class="delete-btn" onclick="deleteOrder(${rowId})">
+                                <i class="fa fa-trash"></i> Futa
+                            </button>
+                        </div>
                       </div>`;
                 });
                 document.getElementById('orderL').innerHTML = h;
@@ -419,12 +459,12 @@
                     }
                     lastC = n;
                 }
-            } catch (e) { console.log("System checking for orders..."); }
+            } catch (e) { console.log("Searching for orders..."); }
         }
 
         window.onload = () => {
             check();
-            setInterval(check, 15000); // Inakagua oda kila baada ya sekunde 15
+            setInterval(check, 15000);
         };
     </script>
 </body>
