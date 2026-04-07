@@ -194,8 +194,9 @@
             object-fit: cover;
         }
 
-        /* Detail View */
-        #detail-view {
+        /* Detail View & Help View */
+        #detail-view,
+        #help-view {
             display: none;
             position: fixed;
             top: 0;
@@ -327,32 +328,47 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 85%;
+            width: 90%;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(25px);
             border-radius: 30px;
             display: flex;
             justify-content: space-around;
-            padding: 15px;
+            padding: 12px;
             z-index: 2000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .nav-item {
             position: relative;
-            font-size: 20px;
+            font-size: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.6;
+        }
+
+        .nav-item span {
+            font-size: 9px;
+            margin-top: 3px;
+            font-weight: bold;
         }
 
         .active-drop {
             position: absolute;
-            top: -25px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%) rotate(45deg);
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: var(--yellow);
             border-radius: 0 50% 50% 50%;
             display: none;
             box-shadow: 0 0 10px var(--yellow);
+        }
+
+        .nav-item.active {
+            opacity: 1;
         }
 
         .nav-item.active .active-drop {
@@ -385,6 +401,34 @@
             color: #222;
             font-size: 11px;
         }
+
+        /* Help Box Styles */
+        .contact-card {
+            background: var(--liquid-glass);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .contact-card b {
+            color: var(--yellow);
+            display: block;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .contact-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: var(--green);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -399,16 +443,25 @@
     </div>
 
     <div id="splash">
-        <img src="iaa.jpg" class="iaa-logo">
+        <a href="https://image2url.com/r2/default/images/1775596692483-e77046f7-4fc7-46bf-aa45-e803c9a00fa5.jpg"
+            target="_blank">
+            <img src="https://image2url.com/r2/default/images/1775596692483-e77046f7-4fc7-46bf-aa45-e803c9a00fa5.jpg"
+                class="iaa-logo" alt="Logo">
+        </a>
+
         <div style="font-size: 12px; color: var(--yellow);">IAA BABATI CAMPUS</div>
         <h2 style="margin: 5px 0;">Zepox Omni Tech</h2>
         <p class="branding">Sponsored by Micho</p>
+
         <div class="selection-container">
-            <div class="select-btn" onclick="enterApp('Rooms')"><i class="fa fa-bed"></i><b>TAFUTA CHUMBA</b></div>
-            <div class="select-btn" onclick="enterApp('Food')"><i class="fa fa-utensils"></i><b>FOOD POINT</b></div>
+            <div class="select-btn" onclick="enterApp('Rooms')">
+                <i class="fa fa-bed"></i><b>TAFUTA CHUMBA</b>
+            </div>
+            <div class="select-btn" onclick="enterApp('Food')">
+                <i class="fa fa-utensils"></i><b>FOOD POINT</b>
+            </div>
         </div>
     </div>
-
     <div id="image-viewer">
         <span class="close-viewer" onclick="closeViewer()">&times;</span>
         <img id="full-res-img" onclick="toggleZoom(this)">
@@ -417,8 +470,11 @@
 
     <div id="app-content" style="display:none; padding-top: 20px; padding-bottom: 120px;">
         <div style="text-align: center; margin-bottom: 10px;">
-            <img src="iaa.jpg"
-                style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid var(--yellow);">
+            <a href="https://image2url.com/r2/default/images/1775596692483-e77046f7-4fc7-46bf-aa45-e803c9a00fa5.jpg">
+                <img src="https://image2url.com/r2/default/images/1775596692483-e77046f7-4fc7-46bf-aa45-e803c9a00fa5.jpg"
+                    style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid var(--yellow);"
+                    alt="IAA Logo">
+            </a>
             <h3 id="view-title" style="margin:5px 0; color:var(--yellow); font-weight: 600;">Finder</h3>
         </div>
 
@@ -430,6 +486,41 @@
         <div id="list-container"></div>
     </div>
 
+    <div id="help-view">
+        <div style="padding: 15px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <button onclick="window.location.reload()"
+                style="background: none; border: none; color: var(--yellow); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 16px;">
+                <i class="fa fa-arrow-left"></i> Rudi
+            </button>
+        </div>
+
+        <div class="content-body" style="padding: 20px;">
+            <h2 style="color: var(--yellow); margin-top: 20px;">Msaada & Mawasiliano</h2>
+            <p style="opacity: 0.8; font-size: 14px; margin-bottom: 30px;">
+                Tafadhali wasiliana nasi kwa msaada wowote kuhusu huduma zetu za vyumba na chakula.
+            </p>
+
+            <div class="contact-card">
+                <b>Jackson James Malemwa (Micho)</b>
+                <p style="margin: 0; opacity: 0.7;">Msimamizi Mkuu</p>
+                <a href="tel:0791493768" class="contact-btn"><i class="fa fa-phone"></i> 0791493768</a>
+            </div>
+
+            <div class="contact-card">
+                <b>Zephaniah Kennedy (Zepox kenny)</b>
+                <p style="margin: 0; opacity: 0.7;">Developer & Founder</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <a href="tel:0790431247" class="contact-btn"><i class="fa fa-phone"></i> 0790431247</a>
+                    <a href="tel:0747712469" class="contact-btn"><i class="fa fa-phone"></i> 0747712469</a>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 50px; opacity: 0.5; font-size: 10px;">
+                <p>© 2026 Zepox Omni Tech<br>IAA Babati Campus</p>
+            </div>
+        </div>
+    </div>
+
     <div id="detail-view">
         <div class="btn-back" onclick="closeDetails()"><i class="fa fa-arrow-left"></i></div>
         <div class="slider">
@@ -439,20 +530,24 @@
     </div>
 
     <div class="bottom-nav">
+        <div class="nav-item" id="nav-Help" onclick="switchTab('Help')">
+            <div class="active-drop"></div><i class="fa fa-headset"></i><span>MSAADA</span>
+        </div>
         <div class="nav-item" id="nav-Rooms" onclick="switchTab('Rooms')">
-            <div class="active-drop"></div>🏠
+            <div class="active-drop"></div><i class="fa fa-bed"></i><span>ROOMS</span>
         </div>
         <div class="nav-item" id="nav-Food" onclick="switchTab('Food')">
-            <div class="active-drop"></div>🍲
+            <div class="active-drop"></div><i class="fa fa-utensils"></i><span>FOOD</span>
         </div>
-        <div class="nav-item" onclick="location.reload()">🔄</div>
+        <div class="nav-item" onclick="location.reload()">
+            <i class="fa fa-sync-alt"></i><span>RELOAD</span>
+        </div>
     </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC7l2pTDeHza5E5swDKV3l1tIaiIxsG0tqnO3iwObniDoducyQbpNLEzAjNcgoeNShfg/exec";
         let currentTab = 'Rooms', allData = [], selectedStars = 0, deferredPrompt;
 
-        // --- SEHEMU YA PWA & INSTALL POP-UP (MPYA) ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Registration failed:", err));
@@ -469,14 +564,11 @@
             const banner = document.getElementById('install-banner');
             const text = document.getElementById('install-text');
             const btn = document.getElementById('install-button');
-
             if (banner) banner.style.display = 'block';
-
             if (platform === "iPhone" && text) {
                 text.innerText = "Kwa iPhone: Bonyeza 'Share' kisha 'Add to Home Screen' 📲";
                 if (btn) btn.style.display = 'none';
             }
-
             if (btn) {
                 btn.onclick = async () => {
                     if (deferredPrompt) {
@@ -493,33 +585,22 @@
         const isStandalone = window.navigator.standalone === true;
         if (isIos && !isStandalone) showInstallBanner("iPhone");
 
-        // --- LOGIC YAKO YA AWALI (BILA KUGUSA HATA NUKTA) ---
         function enterApp(t) {
             document.getElementById('splash').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
             switchTab(t);
-            loadAds(); // Itapakia cache kwanza kisha itatafuta updates
+            loadAds();
         }
 
-        // --- MPYA: ADS WITH LOCAL STORAGE & SILENT UPDATES ---
         async function loadAds() {
-            const adsTrack = document.getElementById('ads-track');
-            const adsBox = document.getElementById('ads-box');
-
-            // 1. Jaribu kupakia kutoka LocalStorage kwanza (Speed)
             const cachedAds = localStorage.getItem('zepox_ads_cache');
-            if (cachedAds) {
-                renderAdsHTML(JSON.parse(cachedAds));
-            }
-
-            // 2. Tafuta updates kimya kimya kutoka kwenye Sheet
+            if (cachedAds) renderAdsHTML(JSON.parse(cachedAds));
             try {
                 const r = await fetch(SCRIPT_URL, {
                     method: "POST",
                     body: JSON.stringify({ action: "getData", payload: { sheetName: "matangazo" } })
                 });
                 const j = await r.json();
-
                 if (j.data && j.data.length >= 4) {
                     const adsData = j.data;
                     const slots = [
@@ -528,8 +609,6 @@
                         { photo: adsData[0].photo3, link: adsData[1].photo3, kichwa: adsData[2].photo3, maelezo: adsData[3].photo3 },
                         { photo: adsData[0].photo4, link: adsData[1].photo4, kichwa: adsData[2].photo4, maelezo: adsData[3].photo4 }
                     ].filter(item => item.photo && item.photo !== "");
-
-                    // Linganisha na cache, kama ni tofauti, update na save
                     if (JSON.stringify(slots) !== cachedAds) {
                         localStorage.setItem('zepox_ads_cache', JSON.stringify(slots));
                         renderAdsHTML(slots);
@@ -542,18 +621,8 @@
             const track = document.getElementById('ads-track');
             let html = '';
             slots.forEach(ad => {
-                const buttonHTML = (ad.link && ad.link !== "" && ad.link !== "undefined")
-                    ? `<a href="${ad.link}" target="_blank" class="ad-link-btn">Fungua Link</a>`
-                    : "";
-                html += `
-        <div class="ad-slide">
-            <img src="${ad.photo}">
-            <div class="ad-info">
-                <p class="ad-title">${ad.kichwa || "Zepox Omni Tech"}</p>
-                <p class="ad-desc">${ad.maelezo || "Huduma Bora kwa Wakati."}</p>
-                ${buttonHTML}
-            </div>
-        </div>`;
+                const buttonHTML = (ad.link && ad.link !== "" && ad.link !== "undefined") ? `<a href="${ad.link}" target="_blank" class="ad-link-btn">Fungua Link</a>` : "";
+                html += `<div class="ad-slide"><img src="${ad.photo}"><div class="ad-info"><p class="ad-title">${ad.kichwa || "Zepox Omni Tech"}</p><p class="ad-desc">${ad.maelezo || "Huduma Bora kwa Wakati."}</p>${buttonHTML}</div></div>`;
             });
             if (html !== '') {
                 track.innerHTML = html;
@@ -565,7 +634,6 @@
         function startAdsAnimation(count) {
             let index = 0;
             if (count <= 1) return;
-            // Futa interval ya zamani kama ipo kuzuia speed kuongezeka
             if (window.adsInterval) clearInterval(window.adsInterval);
             window.adsInterval = setInterval(() => {
                 index = (index + 1) % count;
@@ -573,9 +641,24 @@
             }, 5000);
         }
 
-        function getStoredData(tab) {
-            const cached = localStorage.getItem('zepox_cache_' + tab);
-            return cached ? JSON.parse(cached) : null;
+        function switchTab(t) {
+            currentTab = t;
+            updateNavUI();
+
+            // Ficha views zote kwanza
+            document.getElementById('app-content').style.display = 'none';
+            document.getElementById('help-view').style.display = 'none';
+            document.getElementById('detail-view').style.display = 'none';
+
+            if (t === 'Help') {
+                document.getElementById('help-view').style.display = 'block';
+            } else {
+                document.getElementById('app-content').style.display = 'block';
+                allData = [];
+                document.getElementById('list-container').innerHTML = `<div style="text-align:center; padding:50px;">Inapakia data...</div>`;
+                loadData();
+                document.getElementById('view-title').innerText = t === 'Rooms' ? 'Vyumba Karibu na IAA' : 'Migahawa & Chakula';
+            }
         }
 
         function updateNavUI() {
@@ -583,39 +666,19 @@
             if (document.getElementById('nav-' + currentTab)) document.getElementById('nav-' + currentTab).classList.add('active');
         }
 
-        function getStarsHTML(val) {
-            let starsCount = Math.floor(val / 20);
-            if (starsCount > 5) starsCount = 5;
-            let h = '';
-            for (let i = 1; i <= 5; i++) {
-                h += `<i class="fa fa-star ${i <= starsCount ? 'star-active' : 'star-inactive'}"></i>`;
-            }
-            return h;
-        }
-
         async function loadData() {
-            const cachedData = getStoredData(currentTab);
-            if (cachedData) { allData = cachedData; renderList(); }
-
+            const cached = localStorage.getItem('zepox_cache_' + currentTab);
+            if (cached) { allData = JSON.parse(cached); renderList(); }
             try {
-                const r = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "getData", payload: { sheetName: currentTab } })
-                });
+                const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: currentTab } }) });
                 const j = await r.json();
-
-                const rc = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "getData", payload: { sheetName: "Comments" } })
-                });
+                const rc = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "Comments" } }) });
                 const jc = await rc.json();
                 const allComments = jc.data || [];
-
                 allData = j.data.map(item => {
                     const count = allComments.filter(c => c.targetName === item.jina || c.targetname === item.jina).length;
                     return { ...item, rating: count };
                 });
-
                 localStorage.setItem('zepox_cache_' + currentTab, JSON.stringify(allData));
                 renderList();
             } catch (e) { console.log("Error:", e); }
@@ -624,53 +687,30 @@
         function renderList() {
             if (allData.length === 0) return;
             document.getElementById('list-container').innerHTML = allData.map((item, i) => `
-    <div class="list-card" onclick="openDetails(${i})">
-        <img src="${item.picha1}" class="list-img-thumb">
-        <div style="flex:1">
-            <h4 style="margin:0; font-size:16px;">${item.jina}</h4>
-            <div style="margin:4px 0;">
-                <small style="color:var(--yellow); font-weight:bold;">📍 ${item.umbali} kutoka IAA</small>
-            </div>
-            <small style="opacity:0.6; font-size:11px;">
-                ${currentTab === 'Rooms' ? 'Tsh ' + item.bei + '/=' : 'Chakula & Vinywaji'}
-            </small>
-        </div>
-    </div>`).join('');
+            <div class="list-card" onclick="openDetails(${i})">
+                <img src="${item.picha1}" class="list-img-thumb">
+                <div style="flex:1">
+                    <h4 style="margin:0; font-size:16px;">${item.jina}</h4>
+                    <div style="margin:4px 0;"><small style="color:var(--yellow); font-weight:bold;">📍 ${item.umbali} kutoka IAA</small></div>
+                    <small style="opacity:0.6; font-size:11px;">${currentTab === 'Rooms' ? 'Tsh ' + item.bei + '/=' : 'Chakula & Vinywaji'}</small>
+                </div>
+            </div>`).join('');
         }
 
         function openDetails(i) {
             const item = allData[i];
             const body = document.getElementById('detail-body');
             document.getElementById('main-slider').innerHTML = `<img src="${item.picha1}"><img src="${item.picha2}"><img src="${item.picha3}"><img src="${item.picha4}">`;
+            let stars = Math.floor(item.rating / 20); if (stars > 5) stars = 5;
+            let starsHTML = ''; for (let k = 1; k <= 5; k++) starsHTML += `<i class="fa fa-star ${k <= stars ? 'star-active' : 'star-inactive'}"></i>`;
 
-            let detailsHTML = `<h2 style="color:var(--yellow); margin-bottom:5px;">${item.jina}</h2>
-                       <div class="info-row"><span>📍 Umbali:</span> <b>${item.umbali}</b></div>`;
-
+            let detailsHTML = `<h2 style="color:var(--yellow); margin-bottom:5px;">${item.jina}</h2><div class="info-row"><span>📍 Umbali:</span> <b>${item.umbali}</b></div>`;
             if (currentTab === 'Rooms') {
-                detailsHTML += `<div class="info-row"><span>🏠 Aina:</span> <b>${item.aina}</b></div>
-                       <div class="info-row"><span>🚪 Idadi:</span> <b>${item.idadi || '1'}</b></div>
-                       <h3 style="color:var(--green);">Tsh ${item.bei}/=</h3>
-                       <button onclick="bookRoom(${i})" style="width:100%; padding:18px; border-radius:20px; background:var(--green); border:none; color:white; font-weight:bold;">AGIZA CHUMBA 🏨</button>`;
+                detailsHTML += `<div class="info-row"><span>🏠 Aina:</span> <b>${item.aina}</b></div><div class="info-row"><span>🚪 Idadi:</span> <b>${item.idadi || '1'}</b></div><h3 style="color:var(--green);">Tsh ${item.bei}/=</h3><button onclick="bookRoom(${i})" style="width:100%; padding:18px; border-radius:20px; background:var(--green); border:none; color:white; font-weight:bold;">AGIZA CHUMBA 🏨</button>`;
             } else {
-                detailsHTML += `
-    <div class="photo-btn" onclick="openViewer('${item.mida}')"><span><i class="fa fa-clock"></i> Mida ya Kazi</span><i class="fa fa-expand"></i></div>
-    <div class="photo-btn" onclick="openViewer('${item.menu}')"><span><i class="fa fa-book-open"></i> Picha ya Menu</span><i class="fa fa-expand"></i></div>
-    <div class="info-row"><span>🚚 Delivery:</span> <b>${item.delivery || 'Ipo'}</b></div>
-    <button onclick="showMenu('${item.jina}')" style="width:100%; padding:18px; border-radius:20px; background:var(--yellow); border:none; font-weight:bold;">AGIZA CHAKULA (LIST)</button>
-    <div id="menu-area" style="margin-top:20px;"></div>`;
+                detailsHTML += `<div class="photo-btn" onclick="openViewer('${item.mida}')"><span><i class="fa fa-clock"></i> Mida ya Kazi</span><i class="fa fa-expand"></i></div><div class="photo-btn" onclick="openViewer('${item.menu}')"><span><i class="fa fa-book-open"></i> Picha ya Menu</span><i class="fa fa-expand"></i></div><div class="info-row"><span>🚚 Delivery:</span> <b>${item.delivery || 'Ipo'}</b></div><button onclick="showMenu('${item.jina}')" style="width:100%; padding:18px; border-radius:20px; background:var(--yellow); border:none; font-weight:bold;">AGIZA CHAKULA (LIST)</button><div id="menu-area" style="margin-top:20px;"></div>`;
             }
-
-            detailsHTML += `
-    <div style="margin-top:30px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
-        <h4>Maoni & Ukadiriaji</h4>
-        <div style="margin:10px 0;">Rating: ${getStarsHTML(item.rating)}</div>
-        <div style="margin:10px 0;" id="star-input">${[1, 2, 3, 4, 5].map(n => `<i class="fa fa-star" style="font-size:25px; color:#333;" onclick="setRating(${n})"></i>`).join('')}</div>
-        <input type="text" id="c_name" placeholder="Jina lako" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; background:rgba(255,255,255,0.1); border:none; color:white;">
-        <textarea id="c_text" placeholder="Andika maoni..." style="width:100%; padding:12px; border-radius:10px; background:rgba(255,255,255,0.1); border:none; color:white;"></textarea>
-        <button onclick="submitComment('${item.jina}')" style="width:100%; padding:12px; margin-top:10px; border-radius:10px; background:var(--yellow); border:none; font-weight:bold;">TUMA MAONI</button>
-        <div id="comments-display" style="margin-top:20px;"></div>
-    </div>`;
-
+            detailsHTML += `<div style="margin-top:30px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;"><h4>Maoni & Ukadiriaji</h4><div style="margin:10px 0;">Rating: ${starsHTML}</div><div style="margin:10px 0;" id="star-input">${[1, 2, 3, 4, 5].map(n => `<i class="fa fa-star" style="font-size:25px; color:#333;" onclick="setRating(${n})"></i>`).join('')}</div><input type="text" id="c_name" placeholder="Jina lako" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; background:rgba(255,255,255,0.1); border:none; color:white;"><textarea id="c_text" placeholder="Andika maoni..." style="width:100%; padding:12px; border-radius:10px; background:rgba(255,255,255,0.1); border:none; color:white;"></textarea><button onclick="submitComment('${item.jina}')" style="width:100%; padding:12px; margin-top:10px; border-radius:10px; background:var(--yellow); border:none; font-weight:bold;">TUMA MAONI</button><div id="comments-display" style="margin-top:20px;"></div></div>`;
             body.innerHTML = detailsHTML;
             document.getElementById('detail-view').style.display = 'block';
             loadComments(item.jina);
@@ -685,74 +725,18 @@
             window.location.href = `https://api.whatsapp.com/send?phone=${nambaAdmin}&text=${encodeURIComponent(ujumbeWA)}`;
         }
 
-        function openViewer(url) {
-            if (!url || url === 'undefined') return alert("Picha bado haijawekwa!");
-            document.getElementById('full-res-img').src = url;
-            document.getElementById('image-viewer').style.display = 'flex';
-        }
-
+        function openViewer(url) { if (!url || url === 'undefined') return alert("Picha bado haijawekwa!"); document.getElementById('full-res-img').src = url; document.getElementById('image-viewer').style.display = 'flex'; }
         function closeViewer() { document.getElementById('image-viewer').style.display = 'none'; }
-
-        async function showMenu(restName) {
-            const area = document.getElementById('menu-area');
-            area.innerHTML = "Inapakia Menu...";
-            try {
-                const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "DishList" } }) });
-                const j = await r.json();
-                const dishes = j.data.filter(d => d.mgahawa === restName || d.Mgahawa === restName);
-                area.innerHTML = dishes.map((d, index) => `
-            <div class="dish-card">
-                <img src="${d.picha || d.Picha}" class="dish-img">
-                <div style="flex:1"><b>${d.jinalachakula || d['jina la chakula']}</b><br><small>Tsh ${d.bei}/=</small></div>
-                <button onclick="placeOrder('${restName}', '${d.jinalachakula || d['jina la chakula']}', '${d.bei}', ${index})" style="background:var(--green); border:none; color:white; padding:5px 10px; border-radius:8px;">AGIZA</button>
-            </div>`).join('') || "Orodha haipo kwa sasa.";
-            } catch (e) { area.innerHTML = "Tatizo la mtandao."; }
-        }
-
-        async function submitComment(target) {
-            const name = document.getElementById('c_name').value, text = document.getElementById('c_text').value;
-            if (!name || !text || !selectedStars) return alert("Tafadhali jaza jina, maoni na nyota!");
-
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    body: JSON.stringify({ action: "addComment", payload: { targetName: target, userName: name, commentText: text, userStars: selectedStars } })
-                });
-                alert("Asante kwa maoni yako!");
-                document.getElementById('c_name').value = '';
-                document.getElementById('c_text').value = '';
-                loadComments(target);
-            } catch (e) { alert("Imeshindikana kutuma."); }
-        }
+        function closeDetails() { document.getElementById('detail-view').style.display = 'none'; }
+        function setRating(n) { selectedStars = n; document.querySelectorAll('#star-input i').forEach((s, i) => s.style.color = i < n ? '#eab308' : '#333'); }
 
         async function loadComments(target) {
             try {
                 const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "Comments" } }) });
                 const j = await r.json();
                 const filtered = j.data.filter(c => c.targetName === target || c.targetname === target);
-                document.getElementById('comments-display').innerHTML = filtered.map(c => `
-            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:10px;">
-                <b>${c.userName || c.username}</b> ${'⭐'.repeat(c.userStars || c.userstars)}
-                <p style="margin:5px 0; opacity:0.8;">${c.commentText || c.commenttext}</p>
-            </div>`).join('') || "Kuwa wa kwanza kutoa maoni!";
+                document.getElementById('comments-display').innerHTML = filtered.map(c => `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:10px;"><b>${c.userName || c.username}</b> ${'⭐'.repeat(c.userStars || c.userstars)}<p style="margin:5px 0; opacity:0.8;">${c.commentText || c.commenttext}</p></div>`).join('') || "Kuwa wa kwanza kutoa maoni!";
             } catch (e) { document.getElementById('comments-display').innerHTML = "Maoni hayakupatikana."; }
-        }
-
-        function switchTab(t) {
-            currentTab = t;
-            allData = [];
-            document.getElementById('list-container').innerHTML = `<div style="text-align:center; padding:50px;">Inapakia data...</div>`;
-            updateNavUI();
-            loadData();
-            document.getElementById('view-title').innerText = t === 'Rooms' ? 'Vyumba Karibu na IAA' : 'Migahawa & Chakula';
-        }
-
-        function closeDetails() { document.getElementById('detail-view').style.display = 'none'; }
-
-        function setRating(n) {
-            selectedStars = n;
-            document.querySelectorAll('#star-input i').forEach((s, i) => s.style.color = i < n ? '#eab308' : '#333');
         }
     </script>
 </body>
