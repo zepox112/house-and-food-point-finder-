@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="sw">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zepox Admin Center</title>
+    <style>
+        :root {
+            --green: #22c55e;
+            --yellow: #eab308;
+            --bg: #052e16;
+        }
+
+        body {
+            background: var(--bg);
+            color: white;
+            font-family: sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--yellow);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--green);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--yellow);
+            color: black;
+            font-weight: bold;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #064e3b;
+            border: 1px solid var(--green);
+            border-radius: 10px;
+            color: white;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--green);
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .list-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .list-item img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .badge {
+            background: red;
+            padding: 2px 7px;
+            border-radius: 50%;
+            font-size: 11px;
+        }
+
+        h3 {
+            color: var(--yellow);
+            border-bottom: 1px solid rgba(234, 179, 8, 0.3);
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="glass">
+        <h2 style="margin:0; color:var(--yellow)">Zepox Admin Center</h2>
+        <p style="font-size: 12px; opacity: 0.8;">Management & Ads Control</p>
+        <button onclick="requestNotif()"
+            style="font-size:10px; background:none; color:var(--green); border:1px solid var(--green); border-radius:5px; cursor:pointer;">🔔
+            Washa Notification</button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openP('inbox', this)">📥 Inbox <span id="nC"
+                class="badge">0</span></button>
+        <button class="tab-btn" onclick="openP('manage', this)">📊 Manage All</button>
+        <button class="tab-btn" onclick="openP('rP', this)">🏠 + Nyumba</button>
+        <button class="tab-btn" onclick="openP('fP', this)">🍲 + Mgahawa</button>
+        <button class="tab-btn" onclick="openP('dP', this)">🍗 + Ongeza Chakula</button>
+        <button class="tab-btn" onclick="openP('adP', this)">📢 + Ads</button>
+    </div>
+
+    <div id="inbox" class="panel active">
+        <div id="orderL">Inatafuta oda...</div>
+    </div>
+
+    <div id="manage" class="panel">
+        <h3>Nyumba Zilizosajiliwa</h3>
+        <div id="roomList">Inapakia...</div>
+        <h3>Migahawa Ilizosajiliwa</h3>
+        <div id="foodList">Inapakia...</div>
+        <h3>Matangazo (Ads)</h3>
+        <div id="adsList">Inapakia...</div>
+    </div>
+
+    <div id="rP" class="panel">
+        <div class="glass">
+            <h3>Sajili Nyumba Mpya</h3>
+            <input type="text" id="rn" placeholder="Jina la Nyumba">
+            <input type="number" id="rp" placeholder="Bei (Tsh)">
+            <input type="text" id="ru" placeholder="Umbali toka IAA (mf. 200m)">
+            <select id="rt">
+                <option>Single (Sharing)</option>
+                <option>Single with Toilet</option>
+                <option>Self Contained</option>
+            </select>
+            <input type="number" id="rc" placeholder="Idadi ya Vyumba">
+            <input type="text" id="rs" placeholder="Simu ya Mmiliki">
+            <p style="font-size:12px; color:var(--yellow)">Picha 4 za Nyumba:</p>
+            <input type="file" id="rf1"> <input type="file" id="rf2">
+            <input type="file" id="rf3"> <input type="file" id="rf4">
+            <button class="save-btn" id="sb1" onclick="saveR()">HIFADHI NYUMBA</button>
+        </div>
+    </div>
+
+    <div id="fP" class="panel">
+        <div class="glass">
+            <h3>Sajili Mgahawa Mpya</h3>
+            <input type="text" id="fn" placeholder="Jina la Mgahawa">
+            <select id="fa">
+                <option>Mgahawa</option>
+                <option>Restaurant</option>
+            </select>
+            <input type="text" id="fu_food" placeholder="Umbali toka IAA (mf. 400m)">
+            <select id="fd_food">
+                <option value="Ipo">Huduma ya Delivery: IPO</option>
+                <option value="Haipo">Huduma ya Delivery: HAIPO</option>
+            </select>
+            <p style="font-size:12px; color:var(--yellow)">Picha 4 za Eneo:</p>
+            <input type="file" id="ff1"> <input type="file" id="ff2">
+            <input type="file" id="ff3"> <input type="file" id="ff4">
+            <p style="font-size:12px; color:var(--yellow)">Picha ya Menu & Mida:</p>
+            <input type="file" id="fm">
+            <input type="file" id="ft">
+            <button class="save-btn" id="sb2" onclick="saveF()">HIFADHI MGAHAWA</button>
+        </div>
+    </div>
+
+    <div id="dP" class="panel">
+        <div class="glass">
+            <h3>Ongeza Chakula Kwenye Menu</h3>
+            <select id="targetRes">
+                <option>Pakia Migahawa...</option>
+            </select>
+            <input type="text" id="dishName" placeholder="Jina la Chakula">
+            <input type="number" id="dishPrice" placeholder="Bei">
+            <p style="font-size:12px; color:var(--yellow)">Picha ya Chakula:</p>
+            <input type="file" id="dishImg">
+            <button class="save-btn" id="sb3" onclick="saveDish()">HIFADHI CHAKULA</button>
+        </div>
+    </div>
+
+    <div id="adP" class="panel">
+        <div class="glass">
+            <h3>Simamia Matangazo (Ads)</h3>
+            <p style="font-size:12px; color:var(--yellow)">Chagua Slot ya kubadilisha:</p>
+            <select id="adSlot">
+                <option value="1">Tangazo la 1 (Slot 1)</option>
+                <option value="2">Tangazo la 2 (Slot 2)</option>
+                <option value="3">Tangazo la 3 (Slot 3)</option>
+                <option value="4">Tangazo la 4 (Slot 4)</option>
+            </select>
+            <input type="text" id="adTitle" placeholder="Kichwa cha Tangazo">
+            <textarea id="adDesc" rows="2" placeholder="Maelezo ya tangazo..."></textarea>
+            <input type="text" id="adLink" placeholder="WhatsApp Link au Web Link">
+            <p style="font-size:12px; color:var(--yellow)">Picha Mpya ya Tangazo:</p>
+            <input type="file" id="adImg">
+            <button class="save-btn" id="sb4" onclick="saveAd()">UPDATE TANGAZO</button>
+            <small style="display:block; margin-top:10px; opacity:0.6; text-align:center;">Ili picha ya zamani ijifute,
+                hakikisha Script yako inatumia <b>updateAd</b></small>
+        </div>
+    </div>
+
+    <script>
+        const IMGBB_API_KEY = "9d19a0f1d80f89446815cfbd8d40ee8c";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrJ0bCGOBSbTJJEOpsDxrJtiKN0Hp3GoRiF_vCzyjWPuywXxdqRE8OIf7Q2pHhn_OGjg/exec";
+        let lastC = 0;
+
+        // Core Functions
+        function openP(id, b) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (b) b.classList.add('active');
+            if (id === 'manage') loadManagement();
+            if (id === 'dP') loadRestaurantDropdown();
+        }
+
+        function requestNotif() {
+            Notification.requestPermission().then(perm => {
+                if (perm === "granted") alert("Notification Zimewashwa!");
+            });
+        }
+
+        async function up(f) {
+            if (!f) return "";
+            let d = new FormData();
+            d.append("image", f);
+            try {
+                const r = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: d });
+                const j = await r.json();
+                return j.data.url;
+            } catch (e) { return ""; }
+        }
+
+        async function callZepoxAPI(action, payload) {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: action, payload: payload })
+                });
+                const result = await response.json();
+                return result.data;
+            } catch (e) { console.error("API Error:", e); return []; }
+        }
+
+        // Save Actions
+        async function saveR() {
+            const b = document.getElementById('sb1'); b.innerText = "Inapakia Vyumba..."; b.disabled = true;
+            const imgs = [
+                await up(document.getElementById('rf1').files[0]),
+                await up(document.getElementById('rf2').files[0]),
+                await up(document.getElementById('rf3').files[0]),
+                await up(document.getElementById('rf4').files[0])
+            ];
+            const dataArray = [
+                document.getElementById('rn').value, document.getElementById('rp').value,
+                document.getElementById('ru').value || "200m", document.getElementById('rt').value,
+                document.getElementById('rc').value, document.getElementById('rs').value,
+                imgs[0], imgs[1], imgs[2], imgs[3], "5" // Default rating
+            ];
+            await callZepoxAPI("addData", { sheetName: "Rooms", dataArray: dataArray });
+            alert("Nyumba Imehifadhiwa!"); location.reload();
+        }
+
+        async function saveF() {
+            const b = document.getElementById('sb2'); b.innerText = "Inapakia Mgahawa..."; b.disabled = true;
+            const imgs = [
+                await up(document.getElementById('ff1').files[0]),
+                await up(document.getElementById('ff2').files[0]),
+                await up(document.getElementById('ff3').files[0]),
+                await up(document.getElementById('ff4').files[0])
+            ];
+            const menu = await up(document.getElementById('fm').files[0]);
+            const mida = await up(document.getElementById('ft').files[0]);
+            const dataArray = [
+                document.getElementById('fn').value, imgs[0], imgs[1], imgs[2], imgs[3],
+                menu, mida, document.getElementById('fa').value, "5",
+                document.getElementById('fu_food').value, document.getElementById('fd_food').value
+            ];
+            await callZepoxAPI("addData", { sheetName: "Food", dataArray: dataArray });
+            alert("Mgahawa Umesajiliwa!"); location.reload();
+        }
+
+        async function saveDish() {
+            const b = document.getElementById('sb3'); b.innerText = "Inapakia Chakula..."; b.disabled = true;
+            const img = await up(document.getElementById('dishImg').files[0]);
+            const dataArray = [
+                document.getElementById('targetRes').value, document.getElementById('dishName').value,
+                document.getElementById('dishPrice').value, img
+            ];
+            await callZepoxAPI("addData", { sheetName: "DishList", dataArray: dataArray });
+            alert("Chakula Kimeongezwa!"); location.reload();
+        }
+
+        // MAREKEBISHO: updateAd sasa inatumia mfumo wa Slot ulioboreshwa
+        async function saveAd() {
+            const b = document.getElementById('sb4');
+            const fileInput = document.getElementById('adImg');
+            const slot = document.getElementById('adSlot').value;
+
+            if (!fileInput.files[0]) { alert("Chagua picha ya tangazo!"); return; }
+
+            b.innerText = "Inasafisha & Kupakia Slot " + slot + "..."; b.disabled = true;
+
+            try {
+                const imgUrl = await up(fileInput.files[0]);
+                const payload = {
+                    slot: slot,
+                    title: document.getElementById('adTitle').value,
+                    desc: document.getElementById('adDesc').value,
+                    link: document.getElementById('adLink').value,
+                    img: imgUrl
+                };
+                // Tunaita action ya "updateMatangazo" (Kama ilivyo kwenye Backend mpya)
+                await callZepoxAPI("updateMatangazo", payload);
+                alert("Tangazo la Slot " + slot + " Limebadilishwa!");
+                location.reload();
+            } catch (e) {
+                alert("Hitilafu imetokea!");
+                b.disabled = false;
+                b.innerText = "UPDATE TANGAZO";
+            }
+        }
+
+        // Load Management Data
+        async function loadManagement() {
+            const rooms = await callZepoxAPI("getData", { sheetName: "Rooms" });
+            document.getElementById('roomList').innerHTML = (rooms.length > 0) ? rooms.map(r =>
+                `<div class="list-item"><img src="${r.picha1 || r.Picha1}"><div><b>${r.jina || r.Jina}</b><br>Tsh ${r.bei || r.Bei}/-</div></div>`
+            ).join('') : "Hakuna vyumba.";
+
+            const foods = await callZepoxAPI("getData", { sheetName: "Food" });
+            document.getElementById('foodList').innerHTML = (foods.length > 0) ? foods.map(f =>
+                `<div class="list-item"><img src="${f.picha1 || f.Picha1}"><div><b>${f.jina || f.Jina}</b><br>${f.aina || f.Aina}</div></div>`
+            ).join('') : "Hakuna migahawa.";
+
+            // Marekebisho ya kuonyesha matangazo yaliyopo kwenye slots
+            const ads = await callZepoxAPI("getData", { sheetName: "matangazo" });
+            document.getElementById('adsList').innerHTML = (ads.length > 0) ? ads.map((a, i) =>
+                `<div class="list-item"><img src="${a.photo1 || a.photo2 || a.photo3 || a.photo4 || ''}"><div><b>Slot ${i + 1}</b><br>${a.kichwa || 'Tangazo lilikosekana'}</div></div>`
+            ).join('') : "Hakuna matangazo.";
+        }
+
+        async function loadRestaurantDropdown() {
+            const data = await callZepoxAPI("getData", { sheetName: "Food" });
+            document.getElementById('targetRes').innerHTML = (data.length > 0) ? data.map(f =>
+                `<option value="${f.jina || f.Jina}">${f.jina || f.Jina}</option>`
+            ).join('') : `<option value="">Sajili Mgahawa Kwanza</option>`;
+        }
+
+        // Checker Loop
+        async function check() {
+            try {
+                const data = await callZepoxAPI("getData", { sheetName: "Orders" });
+                let h = ''; let n = 0;
+                if (!data || data.length === 0) {
+                    document.getElementById('orderL').innerHTML = "Hakuna oda mpya.";
+                    return;
+                }
+                data.reverse().forEach(o => {
+                    const status = o.Status || o.status;
+                    if (status === "New") n++;
+                    h += `<div class="glass" style="margin-top:10px; padding:10px; border-left: 5px solid ${status === 'New' ? '#2ecc71' : '#f1c40f'}">
+                        <b>${o.ainayaoda || o["Aina ya Oda"] || 'Oda'}</b>: ${o.maelezo || o.Maelezo}<br>
+                        <small style="opacity:0.7">${o.timestamp || o.Timestamp} | Status: ${status}</small>
+                      </div>`;
+                });
+                document.getElementById('orderL').innerHTML = h;
+                document.getElementById('nC').innerText = n;
+
+                if (n > lastC) {
+                    if (Notification.permission === "granted") {
+                        new Notification("Zepox Admin", {
+                            body: "Oda Mpya Imefika!",
+                            icon: "https://cdn-icons-png.flaticon.com/512/3119/3119338.png"
+                        });
+                    }
+                    lastC = n;
+                }
+            } catch (e) { console.log("System checking for orders..."); }
+        }
+
+        window.onload = () => {
+            check();
+            setInterval(check, 15000); // Inakagua oda kila baada ya sekunde 15
+        };
+    </script>
+</body>
+
+</html>
