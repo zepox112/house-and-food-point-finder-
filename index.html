@@ -548,6 +548,7 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC7l2pTDeHza5E5swDKV3l1tIaiIxsG0tqnO3iwObniDoducyQbpNLEzAjNcgoeNShfg/exec";
         let currentTab = 'Rooms', allData = [], selectedStars = 0, deferredPrompt;
 
+        // 1. Service Worker & Install Logic
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Registration failed:", err));
@@ -585,6 +586,7 @@
         const isStandalone = window.navigator.standalone === true;
         if (isIos && !isStandalone) showInstallBanner("iPhone");
 
+        // 2. Navigation & Tabs
         function enterApp(t) {
             document.getElementById('splash').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
@@ -592,14 +594,66 @@
             loadAds();
         }
 
+        function switchTab(t) {
+            currentTab = t;
+            updateNavUI();
+            document.getElementById('app-content').style.display = 'none';
+            document.getElementById('help-view').style.display = 'none';
+            document.getElementById('detail-view').style.display = 'none';
+
+            if (t === 'Help') {
+                document.getElementById('help-view').style.display = 'block';
+            } else {
+                document.getElementById('app-content').style.display = 'block';
+                allData = [];
+                document.getElementById('list-container').innerHTML = `<div style="text-align:center; padding:50px;">Inapakia data...</div>`;
+                loadData();
+                document.getElementById('view-title').innerText = t === 'Rooms' ? 'Vyumba Karibu na IAA' : 'Migahawa & Chakula';
+            }
+        }
+
+        function updateNavUI() {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if (document.getElementById('nav-' + currentTab)) document.getElementById('nav-' + currentTab).classList.add('active');
+        }
+
+        // 3. Data & Ads
+        async function loadData() {
+            const cached = localStorage.getItem('zepox_cache_' + currentTab);
+            if (cached) { allData = JSON.parse(cached); renderList(); }
+            try {
+                const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: currentTab } }) });
+                const j = await r.json();
+                const rc = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "Comments" } }) });
+                const jc = await rc.json();
+                const allComments = jc.data || [];
+                allData = j.data.map(item => {
+                    const count = allComments.filter(c => (c.targetName || c.targetname) === item.jina).length;
+                    return { ...item, rating: count };
+                });
+                localStorage.setItem('zepox_cache_' + currentTab, JSON.stringify(allData));
+                renderList();
+            } catch (e) { console.log("Error:", e); }
+        }
+
+        function renderList() {
+            if (allData.length === 0) return;
+            document.getElementById('list-container').innerHTML = allData.map((item, i) => `
+        <div class="list-card" onclick="openDetails(${i})">
+            <img src="${item.picha1}" class="list-img-thumb">
+            <div style="flex:1">
+                <h4 style="margin:0; font-size:16px;">${item.jina}</h4>
+                <div style="margin:4px 0;"><small style="color:var(--yellow); font-weight:bold;">📍 ${item.umbali} kutoka IAA</small></div>
+                <small style="opacity:0.6; font-size:11px;">${currentTab === 'Rooms' ? 'Tsh ' + item.bei + '/=' : 'Chakula & Vinywaji'}</small>
+            </div>
+        </div>`).join('');
+        }
+
         async function loadAds() {
             const cachedAds = localStorage.getItem('zepox_ads_cache');
             if (cachedAds) renderAdsHTML(JSON.parse(cachedAds));
             try {
-                const r = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "getData", payload: { sheetName: "matangazo" } })
-                });
+                const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "matangazo" } }) });
                 const j = await r.json();
                 if (j.data && j.data.length >= 4) {
                     const adsData = j.data;
@@ -641,62 +695,7 @@
             }, 5000);
         }
 
-        function switchTab(t) {
-            currentTab = t;
-            updateNavUI();
-
-            // Ficha views zote kwanza
-            document.getElementById('app-content').style.display = 'none';
-            document.getElementById('help-view').style.display = 'none';
-            document.getElementById('detail-view').style.display = 'none';
-
-            if (t === 'Help') {
-                document.getElementById('help-view').style.display = 'block';
-            } else {
-                document.getElementById('app-content').style.display = 'block';
-                allData = [];
-                document.getElementById('list-container').innerHTML = `<div style="text-align:center; padding:50px;">Inapakia data...</div>`;
-                loadData();
-                document.getElementById('view-title').innerText = t === 'Rooms' ? 'Vyumba Karibu na IAA' : 'Migahawa & Chakula';
-            }
-        }
-
-        function updateNavUI() {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            if (document.getElementById('nav-' + currentTab)) document.getElementById('nav-' + currentTab).classList.add('active');
-        }
-
-        async function loadData() {
-            const cached = localStorage.getItem('zepox_cache_' + currentTab);
-            if (cached) { allData = JSON.parse(cached); renderList(); }
-            try {
-                const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: currentTab } }) });
-                const j = await r.json();
-                const rc = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "Comments" } }) });
-                const jc = await rc.json();
-                const allComments = jc.data || [];
-                allData = j.data.map(item => {
-                    const count = allComments.filter(c => c.targetName === item.jina || c.targetname === item.jina).length;
-                    return { ...item, rating: count };
-                });
-                localStorage.setItem('zepox_cache_' + currentTab, JSON.stringify(allData));
-                renderList();
-            } catch (e) { console.log("Error:", e); }
-        }
-
-        function renderList() {
-            if (allData.length === 0) return;
-            document.getElementById('list-container').innerHTML = allData.map((item, i) => `
-            <div class="list-card" onclick="openDetails(${i})">
-                <img src="${item.picha1}" class="list-img-thumb">
-                <div style="flex:1">
-                    <h4 style="margin:0; font-size:16px;">${item.jina}</h4>
-                    <div style="margin:4px 0;"><small style="color:var(--yellow); font-weight:bold;">📍 ${item.umbali} kutoka IAA</small></div>
-                    <small style="opacity:0.6; font-size:11px;">${currentTab === 'Rooms' ? 'Tsh ' + item.bei + '/=' : 'Chakula & Vinywaji'}</small>
-                </div>
-            </div>`).join('');
-        }
-
+        // 4. Details & Food Ordering System
         function openDetails(i) {
             const item = allData[i];
             const body = document.getElementById('detail-body');
@@ -716,6 +715,111 @@
             loadComments(item.jina);
         }
 
+        async function showMenu(restName) {
+            const area = document.getElementById('menu-area');
+            area.innerHTML = "<div style='text-align:center; padding:20px;'><i class='fa fa-spinner fa-spin'></i> Inapakia Menu...</div>";
+            try {
+                const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "DishList" } }) });
+                const j = await r.json();
+                const dishes = j.data.filter(d => d.mgahawa === restName);
+                const now = new Date();
+                now.setMinutes(now.getMinutes() + 30);
+                const minTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                area.innerHTML = dishes.map((d, index) => `
+                <div class="dish-card" style="display: flex; align-items: center; background: rgba(255,255,255,0.05); margin-bottom: 10px; padding: 10px; border-radius: 15px;">
+                    <img src="${d.picha}" class="dish-img" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover;">
+                    <div style="flex:1; margin-left: 10px;">
+                        <b style="font-size: 14px;">${d.jinalachakula}</b><br>
+                        <small style="color: var(--yellow);">Tsh ${d.bei}/=</small>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                           <small>Sahani:</small>
+                           <input type="number" id="qty-${index}" value="1" min="1" style="width: 40px; background: rgba(255,255,255,0.1); border: 1px solid var(--yellow); color: white; border-radius: 5px; text-align: center;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                           <small>Muda:</small>
+                           <input type="time" id="time-${index}" value="${minTime}" min="${minTime}" style="width: 70px; background: rgba(255,255,255,0.1); border: 1px solid var(--yellow); color: white; border-radius: 5px; font-size: 11px;">
+                        </div>
+                        <button onclick="placeOrder('${restName}', '${d.jinalachakula}', '${d.bei}', ${index})" style="background: var(--green); border: none; color: white; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-top: 5px;">AGIZA</button>
+                    </div>
+                </div>
+            `).join('') || "<p style='text-align:center; opacity:0.5;'>Menu ya orodha haipo bado.</p>";
+            } catch (e) { area.innerHTML = "Imeshindwa kupakia menu."; }
+        }
+
+        async function placeOrder(rest, dish, bei, index) {
+            const qty = document.getElementById(`qty-${index}`).value;
+            const mudaVal = document.getElementById(`time-${index}`).value;
+            const simuUser = prompt("Weka namba yako ya simu kutoa oda 📞:");
+            if (!simuUser) return;
+            const jumlaBei = parseInt(bei.replace(/[^0-9]/g, '')) * qty;
+            const maelezoYaOda = `Oda: ${qty} Sahani ya ${dish} toka ${rest}. Mteja atafuata saa ${mudaVal}. Simu: ${simuUser}`;
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "addOrder", payload: { aina: "Chakula", maelezo: maelezoYaOda } })
+                });
+                const nambaAdmin = "255747712469";
+                const ujumbeWA = `🍴 *ODA MPYA YA CHAKULA*\n\n` +
+                    `🥘 *Chakula:* ${dish}\n` +
+                    `🔢 *Idadi:* ${qty} Sahani\n` +
+                    `💰 *Bei:* Tsh ${bei}\n` +
+                    `💵 *Jumla:* Tsh ${jumlaBei}\n` +
+                    `🏫 *Mgahawa:* ${rest}\n` +
+                    `⏰ *Muda wa Kufuata:* ${mudaVal}\n` +
+                    `📞 *Simu ya Mteja:* ${simuUser}`;
+                window.location.href = `https://api.whatsapp.com/send?phone=${nambaAdmin}&text=${encodeURIComponent(ujumbeWA)}`;
+            } catch (error) { alert("Tatizo la mtandao, jaribu tena."); }
+        }
+
+        // 5. Utilities & Comments System Fixed
+        async function submitComment(target) {
+            const name = document.getElementById('c_name').value;
+            const text = document.getElementById('c_text').value;
+            if (!name || !text || selectedStars === 0) return alert("Tafadhali jaza jina, maoni na chagua nyota!");
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerText = "Inatuma...";
+
+            const payload = {
+                userName: name,
+                targetName: target,
+                userStars: selectedStars,
+                commentText: text
+            };
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "addComment", payload: payload })
+                });
+                document.getElementById('c_text').value = "";
+                setRating(0);
+                alert("Asante kwa maoni yako!");
+                loadComments(target); // Pakia upya maoni
+            } catch (e) {
+                alert("Imeshindwa kutuma. Jaribu tena.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "TUMA MAONI";
+            }
+        }
+
+        async function loadComments(target) {
+            try {
+                const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "Comments" } }) });
+                const j = await r.json();
+                const filtered = j.data.filter(c => (c.targetName || c.targetname) === target);
+                document.getElementById('comments-display').innerHTML = filtered.map(c => `
+                <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:10px;">
+                    <b>${c.userName || c.username}</b> ${'⭐'.repeat(c.userStars || c.userstars)}
+                    <p style="margin:5px 0; opacity:0.8;">${c.commentText || c.commenttext}</p>
+                </div>`).join('') || "Kuwa wa kwanza kutoa maoni!";
+            } catch (e) { document.getElementById('comments-display').innerHTML = "Maoni hayakupatikana."; }
+        }
+
         async function bookRoom(i) {
             const item = allData[i];
             const simuMteja = prompt("Weka namba yako ya simu 📞:");
@@ -729,15 +833,6 @@
         function closeViewer() { document.getElementById('image-viewer').style.display = 'none'; }
         function closeDetails() { document.getElementById('detail-view').style.display = 'none'; }
         function setRating(n) { selectedStars = n; document.querySelectorAll('#star-input i').forEach((s, i) => s.style.color = i < n ? '#eab308' : '#333'); }
-
-        async function loadComments(target) {
-            try {
-                const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "Comments" } }) });
-                const j = await r.json();
-                const filtered = j.data.filter(c => c.targetName === target || c.targetname === target);
-                document.getElementById('comments-display').innerHTML = filtered.map(c => `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:10px;"><b>${c.userName || c.username}</b> ${'⭐'.repeat(c.userStars || c.userstars)}<p style="margin:5px 0; opacity:0.8;">${c.commentText || c.commenttext}</p></div>`).join('') || "Kuwa wa kwanza kutoa maoni!";
-            } catch (e) { document.getElementById('comments-display').innerHTML = "Maoni hayakupatikana."; }
-        }
     </script>
 </body>
 
