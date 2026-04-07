@@ -270,6 +270,16 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxNQMoQs0x42CmwM9huz2WYY7tTtKAFtFVNJ33IN2C0ENiLPEw1_1Sn6wS6rwfiDEBTcw/exec";
         let lastC = 0;
 
+        // --- MFUMO WA LOCAL STORAGE (CACHING) ---
+        function saveLocal(key, data) {
+            localStorage.setItem('zepox_' + key, JSON.stringify(data));
+        }
+
+        function getLocal(key) {
+            const data = localStorage.getItem('zepox_' + key);
+            return data ? JSON.parse(data) : null;
+        }
+
         // Core Functions
         function openP(id, b) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -305,7 +315,7 @@
                 });
                 const result = await response.json();
                 return result.data;
-            } catch (e) { console.error("API Error:", e); return []; }
+            } catch (e) { console.error("API Error:", e); return null; }
         }
 
         // Save Actions
@@ -368,10 +378,10 @@
                 const payload = {
                     slot: slot,
                     kichwa: document.getElementById('adTitle').value,
-                    maelezo: document.getElementById('adDesc').value, // Imetumwa kama 'maelezo' ili kulingana na script yako
+                    maelezo: document.getElementById('adDesc').value,
                     link: document.getElementById('adLink').value,
-                    photoLink: imgUrl, // Hii ni kwa ajili ya cell ya Row 2
-                    img: imgUrl      // Support ya jina jingine
+                    photoLink: imgUrl,
+                    img: imgUrl
                 };
                 await callZepoxAPI("updateMatangazo", payload);
                 alert("Tangazo la Slot " + slot + " Limebadilishwa!");
@@ -383,92 +393,120 @@
             }
         }
 
-        // FUTA ODA - Imetengenezwa kuoana na Apps Script yako
         async function deleteOrder(rowNum) {
             if (!confirm("Je, unataka kufuta oda hii?")) return;
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: "POST",
-                    body: JSON.stringify({
-                        action: "deleteOrder",
-                        payload: { id: rowNum }
-                    })
+                    body: JSON.stringify({ action: "deleteOrder", payload: { id: rowNum } })
                 });
                 const result = await response.json();
-
                 if (result.status === "success") {
                     alert("Imefutwa kikamilifu!");
                     check();
-                } else {
-                    alert("Tatizo: " + result.message);
                 }
-            } catch (e) {
-                alert("Imeshindwa kuunganishwa na seva.");
-            }
+            } catch (e) { alert("Imeshindwa kufuta."); }
         }
 
-        async function check() {
-            try {
-                const data = await callZepoxAPI("getData", { sheetName: "Orders" });
-                let h = ''; let n = 0;
-                if (!data || data.length === 0) {
-                    document.getElementById('orderL').innerHTML = "Hakuna oda mpya.";
-                    document.getElementById('nC').innerText = 0;
-                    return;
-                }
-
-                for (let i = 0; i < data.length; i++) {
-                    const o = data[i];
-                    const status = o.status || o.Status;
-                    if (status === "New") n++;
-                    const rowId = i + 2;
-
-                    let card = `<div class="order-card" style="border-left: 5px solid ${status === 'New' ? '#2ecc71' : '#f1c40f'}">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <div>
-                            <b>${o.ainayaoda || 'Oda'}</b>: ${o.maelezo || o.Maelezo}<br>
-                            <small style="opacity:0.7">${o.timestamp || ''} | Status: ${status}</small>
-                        </div>
-                        <button class="delete-btn" onclick="deleteOrder(${rowId})">
-                            <i class="fa fa-trash"></i> Futa
-                        </button>
+        // --- UI RENDERER (Ili kutofuta namba au data) ---
+        function renderOrders(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('orderL').innerHTML = "Hakuna oda mpya.";
+                document.getElementById('nC').innerText = 0;
+                return;
+            }
+            let h = ''; let n = 0;
+            for (let i = 0; i < data.length; i++) {
+                const o = data[i];
+                const status = o.status || o.Status;
+                if (status === "New") n++;
+                const rowId = i + 2;
+                h = `<div class="order-card" style="border-left: 5px solid ${status === 'New' ? '#2ecc71' : '#f1c40f'}">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <b>${o.ainayaoda || 'Oda'}</b>: ${o.maelezo || o.Maelezo}<br>
+                        <small style="opacity:0.7">${o.timestamp || ''} | Status: ${status}</small>
                     </div>
-                </div>`;
-                    h = card + h;
-                }
+                    <button class="delete-btn" onclick="deleteOrder(${rowId})">
+                        <i class="fa fa-trash"></i> Futa
+                    </button>
+                </div>
+            </div>` + h;
+            }
+            document.getElementById('orderL').innerHTML = h;
+            document.getElementById('nC').innerText = n;
+            return n;
+        }
 
-                document.getElementById('orderL').innerHTML = h;
-                document.getElementById('nC').innerText = n;
-            } catch (e) { console.log("Searching..."); }
+        // --- CHECK WITH SILENT UPDATES ---
+        async function check() {
+            // 1. Load Local Kwanza (Background Silent Load)
+            const localData = getLocal('orders');
+            if (localData) renderOrders(localData);
+
+            try {
+                // 2. Fetch Fresh Data from Cloud
+                const cloudData = await callZepoxAPI("getData", { sheetName: "Orders" });
+                if (cloudData) {
+                    saveLocal('orders', cloudData); // Update Local Storage
+                    const n = renderOrders(cloudData); // Update UI kimya kimya
+
+                    if (n > lastC && lastC !== 0) {
+                        if (Notification.permission === "granted") {
+                            new Notification("Zepox Admin", { body: "Oda Mpya Imefika!", icon: "https://cdn-icons-png.flaticon.com/512/3119/3119338.png" });
+                        }
+                    }
+                    lastC = n;
+                }
+            } catch (e) { console.log("Silent update failed..."); }
         }
 
         async function loadManagement() {
-            const rooms = await callZepoxAPI("getData", { sheetName: "Rooms" });
-            document.getElementById('roomList').innerHTML = (rooms && rooms.length > 0) ? rooms.map(r =>
-                `<div class="list-item"><img src="${r.picha1 || r.Picha1}"><div><b>${r.jina || r.Jina}</b><br>Tsh ${r.bei || r.Bei}/-</div></div>`
-            ).join('') : "Hakuna vyumba.";
+            // Load Local for speed
+            const lR = getLocal('rooms'); if (lR) renderRooms(lR);
+            const lF = getLocal('foods'); if (lF) renderFoods(lF);
 
-            const foods = await callZepoxAPI("getData", { sheetName: "Food" });
-            document.getElementById('foodList').innerHTML = (foods && foods.length > 0) ? foods.map(f =>
-                `<div class="list-item"><img src="${f.picha1 || f.Picha1}"><div><b>${f.jina || f.Jina}</b><br>${f.aina || f.Aina}</div></div>`
-            ).join('') : "Hakuna migahawa.";
+            // Fetch Cloud
+            const r = await callZepoxAPI("getData", { sheetName: "Rooms" });
+            if (r) { saveLocal('rooms', r); renderRooms(r); }
+
+            const f = await callZepoxAPI("getData", { sheetName: "Food" });
+            if (f) { saveLocal('foods', f); renderFoods(f); }
 
             const ads = await callZepoxAPI("getData", { sheetName: "matangazo" });
-            document.getElementById('adsList').innerHTML = (ads && ads.length > 0) ? ads.map((a, i) =>
+            if (ads) renderAds(ads);
+        }
+
+        function renderRooms(rooms) {
+            document.getElementById('roomList').innerHTML = rooms.map(r =>
+                `<div class="list-item"><img src="${r.picha1 || r.Picha1}"><div><b>${r.jina || r.Jina}</b><br>Tsh ${r.bei || r.Bei}/-</div></div>`
+            ).join('');
+        }
+
+        function renderFoods(foods) {
+            document.getElementById('foodList').innerHTML = foods.map(f =>
+                `<div class="list-item"><img src="${f.picha1 || f.Picha1}"><div><b>${f.jina || f.Jina}</b><br>${f.aina || f.Aina}</div></div>`
+            ).join('');
+        }
+
+        function renderAds(ads) {
+            document.getElementById('adsList').innerHTML = ads.map((a, i) =>
                 `<div class="list-item"><img src="${a.photo1 || a.photo2 || a.photo3 || a.photo4 || ''}"><div><b>Slot ${i + 1}</b><br>${a.kichwa || 'Tangazo'}</div></div>`
-            ).join('') : "Hakuna matangazo.";
+            ).join('');
         }
 
         async function loadRestaurantDropdown() {
-            const data = await callZepoxAPI("getData", { sheetName: "Food" });
-            document.getElementById('targetRes').innerHTML = (data && data.length > 0) ? data.map(f =>
-                `<option value="${f.jina || f.Jina}">${f.jina || f.Jina}</option>`
-            ).join('') : `<option value="">Sajili Mgahawa Kwanza</option>`;
+            const data = getLocal('foods') || await callZepoxAPI("getData", { sheetName: "Food" });
+            if (data) {
+                document.getElementById('targetRes').innerHTML = data.map(f =>
+                    `<option value="${f.jina || f.Jina}">${f.jina || f.Jina}</option>`
+                ).join('');
+            }
         }
 
         window.onload = () => {
-            check();
-            setInterval(check, 15000);
+            check(); // Itaanza na Local, kisha itavuta Cloud
+            setInterval(check, 15000); // Silent updates kila sekunde 15
         };
     </script>
 </body>
