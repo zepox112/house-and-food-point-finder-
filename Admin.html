@@ -211,6 +211,9 @@
         <div class="glass">
             <h3>Sajili Mgahawa Mpya</h3>
             <input type="text" id="fn" placeholder="Jina la Mgahawa">
+            <input type="text" id="fs" placeholder="Namba ya Simu ya Mgahawa (0...)">
+            <input type="text" id="fl" placeholder="Link ya Google Maps (Location)">
+
             <select id="fa">
                 <option>Mgahawa</option>
                 <option>Restaurant</option>
@@ -347,10 +350,13 @@
             ];
             const menu = await up(document.getElementById('fm').files[0]);
             const mida = await up(document.getElementById('ft').files[0]);
+
+            // Ongezeko la namba ya simu na link kwenye array (Hakikisha Column L ni Simu na Column M ni Map kwenye Sheet)
             const dataArray = [
                 document.getElementById('fn').value, imgs[0], imgs[1], imgs[2], imgs[3],
                 menu, mida, document.getElementById('fa').value, "5",
-                document.getElementById('fu_food').value, document.getElementById('fd_food').value
+                document.getElementById('fu_food').value, document.getElementById('fd_food').value,
+                document.getElementById('fs').value, document.getElementById('fl').value
             ];
             await callZepoxAPI("addData", { sheetName: "Food", dataArray: dataArray });
             alert("Mgahawa Umesajiliwa!"); location.reload();
@@ -440,16 +446,14 @@
 
         // --- CHECK WITH SILENT UPDATES ---
         async function check() {
-            // 1. Load Local Kwanza (Background Silent Load)
             const localData = getLocal('orders');
             if (localData) renderOrders(localData);
 
             try {
-                // 2. Fetch Fresh Data from Cloud
                 const cloudData = await callZepoxAPI("getData", { sheetName: "Orders" });
                 if (cloudData) {
-                    saveLocal('orders', cloudData); // Update Local Storage
-                    const n = renderOrders(cloudData); // Update UI kimya kimya
+                    saveLocal('orders', cloudData);
+                    const n = renderOrders(cloudData);
 
                     if (n > lastC && lastC !== 0) {
                         if (Notification.permission === "granted") {
@@ -462,11 +466,9 @@
         }
 
         async function loadManagement() {
-            // Load Local for speed
             const lR = getLocal('rooms'); if (lR) renderRooms(lR);
             const lF = getLocal('foods'); if (lF) renderFoods(lF);
 
-            // Fetch Cloud
             const r = await callZepoxAPI("getData", { sheetName: "Rooms" });
             if (r) { saveLocal('rooms', r); renderRooms(r); }
 
@@ -505,10 +507,11 @@
         }
 
         window.onload = () => {
-            check(); // Itaanza na Local, kisha itavuta Cloud
-            setInterval(check, 15000); // Silent updates kila sekunde 15
+            check();
+            setInterval(check, 15000);
         };
     </script>
 </body>
+
 
 </html>

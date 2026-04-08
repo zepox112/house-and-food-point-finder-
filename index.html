@@ -707,6 +707,15 @@
             let starsHTML = ''; for (let k = 1; k <= 5; k++) starsHTML += `<i class="fa fa-star ${k <= stars ? 'star-active' : 'star-inactive'}"></i>`;
 
             let detailsHTML = `<h2 style="color:var(--yellow); margin-bottom:5px;">${item.jina}</h2><div class="info-row"><span>📍 Umbali:</span> <b>${item.umbali}</b></div>`;
+
+            // Mabadiliko hapa kwa ajili ya Map Link
+            if (currentTab === 'Food') {
+                const mapLink = item.linkyamap || item.LinkYaMap;
+                if (mapLink && mapLink !== "" && mapLink !== "undefined") {
+                    detailsHTML += `<div class="info-row"><span>🗺️ Ramani:</span> <a href="${mapLink}" target="_blank" style="color:var(--yellow); font-weight:bold; text-decoration:underline;">Tazama kwenye ramani</a></div>`;
+                }
+            }
+
             if (currentTab === 'Rooms') {
                 detailsHTML += `<div class="info-row"><span>🏠 Aina:</span> <b>${item.aina}</b></div><div class="info-row"><span>🚪 Idadi:</span> <b>${item.idadi || '1'}</b></div><h3 style="color:var(--green);">Tsh ${item.bei}/=</h3><button onclick="bookRoom(${i})" style="width:100%; padding:18px; border-radius:20px; background:var(--green); border:none; color:white; font-weight:bold;">AGIZA CHUMBA 🏨</button>`;
             } else {
@@ -750,7 +759,6 @@
             `).join('') || "<p style='text-align:center; opacity:0.5;'>Menu ya orodha haipo bado.</p>";
             } catch (e) { area.innerHTML = "Imeshindwa kupakia menu."; }
         }
-
         async function placeOrder(rest, dish, bei, index) {
             const qty = document.getElementById(`qty-${index}`).value;
             const mudaVal = document.getElementById(`time-${index}`).value;
@@ -761,13 +769,13 @@
             const jumlaBei = parseInt(bei.replace(/[^0-9]/g, '')) * qty;
             const maelezoYaOda = `Oda: ${qty} Sahani ya ${dish} toka ${rest}. Mteja atafuata saa ${mudaVal}. Simu: ${simuUser}. Jumla: Tsh ${jumlaBei}/-`;
 
-            // Onyesha mteja kuwa oda inatumwa
             const btn = event.target;
             const originalText = btn.innerText;
             btn.innerText = "Inatuma oda...";
             btn.disabled = true;
 
             try {
+                // Sehemu ya kwanza: Inatuma data kwenye Google Sheets kama kawaida (Hijaondolewa kitu)
                 await fetch(SCRIPT_URL, {
                     method: "POST",
                     body: JSON.stringify({
@@ -779,10 +787,22 @@
                     })
                 });
 
-                // Badala ya kwenda WhatsApp, tunaonyesha ujumbe wa mafanikio hapa hapa
+                // Sehemu ya pili: Inatafuta namba ya simu ya mgahawa (Column L)
+                const restaurantData = allData.find(item => item.jina === rest);
+                const nambaMgahawa = restaurantData ? (restaurantData.simu || restaurantData.Simu) : null;
+
                 alert("✅ Oda yako imepokelewa na Zepox Admin! Tunashughulikia sasa hivi.");
 
-                // Rudisha kitufe kwenye hali ya kawaida
+                // Sehemu ya tatu: Inafungua SMS ya kawaida kwenda kwa mgahawa
+                if (nambaMgahawa) {
+                    const ujumbeSMS = `ODA MPYA: ${qty} sahani ya ${dish}. Mteja atakuja saa ${mudaVal}. Simu: ${simuUser}. Jumla: Tsh ${jumlaBei}/-. (Kutoka Zepox App)`;
+
+                    setTimeout(() => {
+                        // Hii inafungua app ya SMS ikiwa na ujumbe tayari
+                        window.location.href = `sms:${nambaMgahawa}?body=${encodeURIComponent(ujumbeSMS)}`;
+                    }, 1200);
+                }
+
                 btn.innerText = originalText;
                 btn.disabled = false;
 
@@ -817,7 +837,7 @@
                 document.getElementById('c_text').value = "";
                 setRating(0);
                 alert("Asante kwa maoni yako!");
-                loadComments(target); // Pakia upya maoni
+                loadComments(target);
             } catch (e) {
                 alert("Imeshindwa kutuma. Jaribu tena.");
             } finally {
