@@ -547,6 +547,29 @@
         (function () { if (!window.chatbase || window.chatbase("getState") !== "initialized") { window.chatbase = (...arguments) => { if (!window.chatbase.q) { window.chatbase.q = [] } window.chatbase.q.push(arguments) }; window.chatbase = new Proxy(window.chatbase, { get(target, prop) { if (prop === "q") { return target.q } return (...args) => target(prop, ...args) } }) } const onLoad = function () { const script = document.createElement("script"); script.src = "https://www.chatbase.co/embed.min.js"; script.id = "zIsgG-xGmk15dNsCIMV2u"; script.domain = "www.chatbase.co"; document.body.appendChild(script) }; if (document.readyState === "complete") { onLoad() } else { window.addEventListener("load", onLoad) } })();
     </script>
 
+    <style>
+        /* Skeleton Loading Style - Kijivu kinachong'aa */
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .skeleton-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            height: 80px;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+    </style>
+
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC7l2pTDeHza5E5swDKV3l1tIaiIxsG0tqnO3iwObniDoducyQbpNLEzAjNcgoeNShfg/exec";
         let currentTab = 'Rooms', allData = [], selectedStars = 0, deferredPrompt;
@@ -608,8 +631,22 @@
                 document.getElementById('help-view').style.display = 'block';
             } else {
                 document.getElementById('app-content').style.display = 'block';
-                allData = [];
-                document.getElementById('list-container').innerHTML = `<div style="text-align:center; padding:50px;">Inapakia data...</div>`;
+
+                // --- Maboresho: Kijivu (Skeleton) badala ya neno Inapakia ---
+                document.getElementById('list-container').innerHTML = `
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            `;
+
+                // Pakia cache kwanza ili ije fasta
+                const cached = localStorage.getItem('zepox_cache_' + currentTab);
+                if (cached) {
+                    allData = JSON.parse(cached);
+                    renderList();
+                }
+
                 loadData();
                 document.getElementById('view-title').innerText = t === 'Rooms' ? 'Vyumba Karibu na IAA' : 'Migahawa & Chakula';
             }
@@ -622,34 +659,39 @@
 
         // 3. Data & Ads
         async function loadData() {
-            const cached = localStorage.getItem('zepox_cache_' + currentTab);
-            if (cached) { allData = JSON.parse(cached); renderList(); }
             try {
                 const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: currentTab } }) });
                 const j = await r.json();
                 const rc = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "Comments" } }) });
                 const jc = await rc.json();
                 const allComments = jc.data || [];
+
                 allData = j.data.map(item => {
                     const count = allComments.filter(c => (c.targetName || c.targetname) === item.jina).length;
                     return { ...item, rating: count };
                 });
+
+                // Hifadhi kwenye Cache kwa ajili ya kuingia kwa haraka baadaye
                 localStorage.setItem('zepox_cache_' + currentTab, JSON.stringify(allData));
                 renderList();
-            } catch (e) { console.log("Error:", e); }
+            } catch (e) {
+                console.log("Error:", e);
+                // Ikishindwa kabisa na huna cache, basi ndio ionekane error
+                if (allData.length === 0) document.getElementById('list-container').innerHTML = `<p style="text-align:center;">Internet yako ni dhaifu kidogo.</p>`;
+            }
         }
 
         function renderList() {
             if (allData.length === 0) return;
             document.getElementById('list-container').innerHTML = allData.map((item, i) => `
-        <div class="list-card" onclick="openDetails(${i})">
-            <img src="${item.picha1}" class="list-img-thumb">
-            <div style="flex:1">
-                <h4 style="margin:0; font-size:16px;">${item.jina}</h4>
-                <div style="margin:4px 0;"><small style="color:var(--yellow); font-weight:bold;">📍 ${item.umbali} kutoka IAA</small></div>
-                <small style="opacity:0.6; font-size:11px;">${currentTab === 'Rooms' ? 'Tsh ' + item.bei + '/=' : 'Chakula & Vinywaji'}</small>
-            </div>
-        </div>`).join('');
+    <div class="list-card" onclick="openDetails(${i})">
+        <img src="${item.picha1}" class="list-img-thumb" loading="lazy">
+        <div style="flex:1">
+            <h4 style="margin:0; font-size:16px;">${item.jina}</h4>
+            <div style="margin:4px 0;"><small style="color:var(--yellow); font-weight:bold;">📍 ${item.umbali} kutoka IAA</small></div>
+            <small style="opacity:0.6; font-size:11px;">${currentTab === 'Rooms' ? 'Tsh ' + item.bei + '/=' : 'Chakula & Vinywaji'}</small>
+        </div>
+    </div>`).join('');
         }
 
         async function loadAds() {
@@ -666,6 +708,7 @@
                         { photo: adsData[0].photo3, link: adsData[1].photo3, kichwa: adsData[2].photo3, maelezo: adsData[3].photo3 },
                         { photo: adsData[0].photo4, link: adsData[1].photo4, kichwa: adsData[2].photo4, maelezo: adsData[3].photo4 }
                     ].filter(item => item.photo && item.photo !== "");
+
                     if (JSON.stringify(slots) !== cachedAds) {
                         localStorage.setItem('zepox_ads_cache', JSON.stringify(slots));
                         renderAdsHTML(slots);
@@ -679,7 +722,7 @@
             let html = '';
             slots.forEach(ad => {
                 const buttonHTML = (ad.link && ad.link !== "" && ad.link !== "undefined") ? `<a href="${ad.link}" target="_blank" class="ad-link-btn">Fungua Link</a>` : "";
-                html += `<div class="ad-slide"><img src="${ad.photo}"><div class="ad-info"><p class="ad-title">${ad.kichwa || "Zepox Omni Tech"}</p><p class="ad-desc">${ad.maelezo || "Huduma Bora kwa Wakati."}</p>${buttonHTML}</div></div>`;
+                html += `<div class="ad-slide"><img src="${ad.photo}" loading="lazy"><div class="ad-info"><p class="ad-title">${ad.kichwa || "Zepox Omni Tech"}</p><p class="ad-desc">${ad.maelezo || "Huduma Bora kwa Wakati."}</p>${buttonHTML}</div></div>`;
             });
             if (html !== '') {
                 track.innerHTML = html;
@@ -708,7 +751,6 @@
 
             let detailsHTML = `<h2 style="color:var(--yellow); margin-bottom:5px;">${item.jina}</h2><div class="info-row"><span>📍 Umbali:</span> <b>${item.umbali}</b></div>`;
 
-            // Mabadiliko hapa kwa ajili ya Map Link
             if (currentTab === 'Food') {
                 const mapLink = item.linkyamap || item.LinkYaMap;
                 if (mapLink && mapLink !== "" && mapLink !== "undefined") {
@@ -738,27 +780,28 @@
                 now.setMinutes(now.getMinutes() + 30);
                 const minTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
                 area.innerHTML = dishes.map((d, index) => `
-                <div class="dish-card" style="display: flex; align-items: center; background: rgba(255,255,255,0.05); margin-bottom: 10px; padding: 10px; border-radius: 15px;">
-                    <img src="${d.picha}" class="dish-img" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover;">
-                    <div style="flex:1; margin-left: 10px;">
-                        <b style="font-size: 14px;">${d.jinalachakula}</b><br>
-                        <small style="color: var(--yellow);">Tsh ${d.bei}/=</small>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                           <small>Sahani:</small>
-                           <input type="number" id="qty-${index}" value="1" min="1" style="width: 40px; background: rgba(255,255,255,0.1); border: 1px solid var(--yellow); color: white; border-radius: 5px; text-align: center;">
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                           <small>Muda:</small>
-                           <input type="time" id="time-${index}" value="${minTime}" min="${minTime}" style="width: 70px; background: rgba(255,255,255,0.1); border: 1px solid var(--yellow); color: white; border-radius: 5px; font-size: 11px;">
-                        </div>
-                        <button onclick="placeOrder('${restName}', '${d.jinalachakula}', '${d.bei}', ${index})" style="background: var(--green); border: none; color: white; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-top: 5px;">AGIZA</button>
-                    </div>
+            <div class="dish-card" style="display: flex; align-items: center; background: rgba(255,255,255,0.05); margin-bottom: 10px; padding: 10px; border-radius: 15px;">
+                <img src="${d.picha}" class="dish-img" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover;">
+                <div style="flex:1; margin-left: 10px;">
+                    <b style="font-size: 14px;">${d.jinalachakula}</b><br>
+                    <small style="color: var(--yellow);">Tsh ${d.bei}/=</small>
                 </div>
-            `).join('') || "<p style='text-align:center; opacity:0.5;'>Menu ya orodha haipo bado.</p>";
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                       <small>Sahani:</small>
+                       <input type="number" id="qty-${index}" value="1" min="1" style="width: 40px; background: rgba(255,255,255,0.1); border: 1px solid var(--yellow); color: white; border-radius: 5px; text-align: center;">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                       <small>Muda:</small>
+                       <input type="time" id="time-${index}" value="${minTime}" min="${minTime}" style="width: 70px; background: rgba(255,255,255,0.1); border: 1px solid var(--yellow); color: white; border-radius: 5px; font-size: 11px;">
+                    </div>
+                    <button onclick="placeOrder('${restName}', '${d.jinalachakula}', '${d.bei}', ${index})" style="background: var(--green); border: none; color: white; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-top: 5px;">AGIZA</button>
+                </div>
+            </div>
+        `).join('') || "<p style='text-align:center; opacity:0.5;'>Menu ya orodha haipo bado.</p>";
             } catch (e) { area.innerHTML = "Imeshindwa kupakia menu."; }
         }
+
         async function placeOrder(rest, dish, bei, index) {
             const qty = document.getElementById(`qty-${index}`).value;
             const mudaVal = document.getElementById(`time-${index}`).value;
@@ -775,7 +818,6 @@
             btn.disabled = true;
 
             try {
-                // Sehemu ya kwanza: Inatuma data kwenye Google Sheets kama kawaida (Hijaondolewa kitu)
                 await fetch(SCRIPT_URL, {
                     method: "POST",
                     body: JSON.stringify({
@@ -787,18 +829,14 @@
                     })
                 });
 
-                // Sehemu ya pili: Inatafuta namba ya simu ya mgahawa (Column L)
                 const restaurantData = allData.find(item => item.jina === rest);
                 const nambaMgahawa = restaurantData ? (restaurantData.simu || restaurantData.Simu) : null;
 
                 alert("✅ Oda yako imepokelewa na Zepox Admin! Tunashughulikia sasa hivi.");
 
-                // Sehemu ya tatu: Inafungua SMS ya kawaida kwenda kwa mgahawa
                 if (nambaMgahawa) {
                     const ujumbeSMS = `ODA MPYA: ${qty} sahani ya ${dish}. Mteja atakuja saa ${mudaVal}. Simu: ${simuUser}. Jumla: Tsh ${jumlaBei}/-. (Kutoka Zepox App)`;
-
                     setTimeout(() => {
-                        // Hii inafungua app ya SMS ikiwa na ujumbe tayari
                         window.location.href = `sms:${nambaMgahawa}?body=${encodeURIComponent(ujumbeSMS)}`;
                     }, 1200);
                 }
@@ -812,6 +850,7 @@
                 btn.disabled = false;
             }
         }
+
         // 5. Utilities & Comments System Fixed
         async function submitComment(target) {
             const name = document.getElementById('c_name').value;
@@ -852,10 +891,10 @@
                 const j = await r.json();
                 const filtered = j.data.filter(c => (c.targetName || c.targetname) === target);
                 document.getElementById('comments-display').innerHTML = filtered.map(c => `
-                <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:10px;">
-                    <b>${c.userName || c.username}</b> ${'⭐'.repeat(c.userStars || c.userstars)}
-                    <p style="margin:5px 0; opacity:0.8;">${c.commentText || c.commenttext}</p>
-                </div>`).join('') || "Kuwa wa kwanza kutoa maoni!";
+            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:10px;">
+                <b>${c.userName || c.username}</b> ${'⭐'.repeat(c.userStars || c.userstars)}
+                <p style="margin:5px 0; opacity:0.8;">${c.commentText || c.commenttext}</p>
+            </div>`).join('') || "Kuwa wa kwanza kutoa maoni!";
             } catch (e) { document.getElementById('comments-display').innerHTML = "Maoni hayakupatikana."; }
         }
 
