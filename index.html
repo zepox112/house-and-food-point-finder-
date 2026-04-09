@@ -911,6 +911,45 @@
         function closeViewer() { document.getElementById('image-viewer').style.display = 'none'; }
         function closeDetails() { document.getElementById('detail-view').style.display = 'none'; }
         function setRating(n) { selectedStars = n; document.querySelectorAll('#star-input i').forEach((s, i) => s.style.color = i < n ? '#eab308' : '#333'); }
+    // 6. Touch Support for Ads Sliding
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let adIndex = 0;
+
+        const adsBox = document.getElementById('ads-box');
+        
+        adsBox.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            // Sitisha auto-animation mtumiaji akigusa
+            if (window.adsInterval) clearInterval(window.adsInterval);
+        });
+
+        adsBox.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleGesture();
+        });
+
+        function handleGesture() {
+            const track = document.getElementById('ads-track');
+            const slides = document.querySelectorAll('.ad-slide');
+            const totalSlides = slides.length;
+
+            if (totalSlides <= 1) return;
+
+            // Swipe Left (Nenda mbele)
+            if (touchStartX - touchEndX > 50) {
+                adIndex = (adIndex + 1) % totalSlides;
+            }
+            // Swipe Right (Rudi nyuma)
+            if (touchEndX - touchStartX > 50) {
+                adIndex = (adIndex - 1 + totalSlides) % totalSlides;
+            }
+
+            track.style.transform = `translateX(-${adIndex * 100}%)`;
+            
+            // Washa tena auto-animation baada ya swipe
+            startAdsAnimation(totalSlides);
+        }
     </script>
 </body>
 
