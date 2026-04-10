@@ -776,9 +776,11 @@
                 const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getData", payload: { sheetName: "DishList" } }) });
                 const j = await r.json();
                 const dishes = j.data.filter(d => d.mgahawa === restName);
+
+                // Tunapata muda wa sasa hivi bila kuongeza dakika 30
                 const now = new Date();
-                now.setMinutes(now.getMinutes() + 30);
-                const minTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+
                 area.innerHTML = dishes.map((d, index) => `
             <div class="dish-card" style="display: flex; align-items: center; background: rgba(255,255,255,0.05); margin-bottom: 10px; padding: 10px; border-radius: 15px;">
                 <img src="${d.picha}" class="dish-img" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover;">
@@ -788,29 +790,52 @@
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
-                       <small>Sahani:</small>
+                       <small>Idadi:</small> 
                        <input type="number" id="qty-${index}" value="1" min="1" style="width: 40px; background: rgba(255,255,255,0.1); border: 1px solid var(--yellow); color: white; border-radius: 5px; text-align: center;">
                     </div>
                     <div style="display: flex; align-items: center; gap: 5px;">
                        <small>Muda:</small>
-                       <input type="time" id="time-${index}" value="${minTime}" min="${minTime}" style="width: 70px; background: rgba(255,255,255,0.1); border: 1px solid var(--yellow); color: white; border-radius: 5px; font-size: 11px;">
+                       <input type="time" id="time-${index}" value="${currentTime}" style="width: 70px; background: rgba(255,255,255,0.1); border: 1px solid var(--yellow); color: white; border-radius: 5px; font-size: 11px;">
                     </div>
                     <button onclick="placeOrder('${restName}', '${d.jinalachakula}', '${d.bei}', ${index})" style="background: var(--green); border: none; color: white; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-top: 5px;">AGIZA</button>
                 </div>
             </div>
         `).join('') || "<p style='text-align:center; opacity:0.5;'>Menu ya orodha haipo bado.</p>";
-            } catch (e) { area.innerHTML = "Imeshindwa kupakia menu."; }
+            } catch (e) {
+                area.innerHTML = "<p style='text-align:center;'>Imeshindwa kupakia menu. Angalia mtandao.</p>";
+            }
         }
 
         async function placeOrder(rest, dish, bei, index) {
             const qty = document.getElementById(`qty-${index}`).value;
             const mudaVal = document.getElementById(`time-${index}`).value;
-            const simuUser = prompt("Weka namba yako ya simu kutoa oda 📞:");
 
+            // 1. Chagua kama anafuata au analetewa (Pick-up vs Delivery)
+            const isDelivery = confirm("Je, unataka upelekewe (Delivery)? \n\nBonyeza 'OK' kupelekewa alipo, \nBonyeza 'Cancel' kukuta kimeshaandaliwa (Pick-up).");
+
+            let deliveryInfo = "";
+            let mtejaJina = prompt("Weka jina lako:");
+            if (!mtejaJina) return;
+
+            let simuUser = prompt("Weka namba yako ya simu 📞:");
             if (!simuUser) return;
 
-            const jumlaBei = parseInt(bei.replace(/[^0-9]/g, '')) * qty;
-            const maelezoYaOda = `Oda: ${qty} Sahani ya ${dish} toka ${rest}. Mteja atafuata saa ${mudaVal}. Simu: ${simuUser}. Jumla: Tsh ${jumlaBei}/-`;
+            if (isDelivery) {
+                // 2. Chagua Block (Hostel au Admin)
+                const blockChoice = confirm("Chagua Jengo:\n\nBonyeza 'OK' kwa HOSTEL BLOCK\nBonyeza 'Cancel' kwa ADMINISTRATION BLOCK");
+                const block = blockChoice ? "Hostel Block" : "Administration Block";
+
+                // 3. Chagua Floor
+                const floorChoice = prompt("Chagua Floor (Andika namba):\n0: Ground\n1: Floor 1\n2: Floor 2\n3: Floor 3\n4: Floor 4");
+                const floors = ["Ground", "Floor 1", "Floor 2", "Floor 3", "Floor 4"];
+                const floor = floors[floorChoice] || "Hajataja Floor";
+
+                // 4. Room Number
+                const room = prompt("Andika Room Number:");
+                deliveryInfo = `📍 Delivery: ${block}, ${floor}, Room ${room || 'N/A'}`;
+            } else {
+                deliveryInfo = `🏃 Pick-up: Mteja atafuata mgahawani`;
+            }
 
             const btn = event.target;
             const originalText = btn.innerText;
@@ -818,6 +843,16 @@
             btn.disabled = true;
 
             try {
+                const jumlaBei = parseInt(bei.toString().replace(/[^0-9]/g, '')) * qty;
+
+                // Kutengeneza ujumbe kamili
+                const maelezoYaOda = `ODA MPYA: ${qty} Idadi ${dish} kutoka ${rest}.\n` +
+                    `Mteja: ${mtejaJina} (${simuUser})\n` +
+                    `Muda: ${mudaVal}\n` +
+                    `${deliveryInfo}\n` +
+                    `Jumla: Tsh ${jumlaBei}/-`;
+
+                // Hifadhi kwenye Google Sheets (Zepox Admin)
                 await fetch(SCRIPT_URL, {
                     method: "POST",
                     body: JSON.stringify({
@@ -828,24 +863,27 @@
                         }
                     })
                 });
-
+                // 2. Tuma SMS kwa wahudumu 2
                 const restaurantData = allData.find(item => item.jina === rest);
-                const nambaMgahawa = restaurantData ? (restaurantData.simu || restaurantData.Simu) : null;
+                const namba1 = restaurantData ? (restaurantData.simu || restaurantData.Simu) : null;
+                const namba2 = "255747712469"; // Namba ya mhudumu wa pili
 
-                alert("✅ Oda yako imepokelewa na Zepox Admin! Tunashughulikia sasa hivi.");
+                alert("✅ Oda imehifadhiwa!");
 
-                if (nambaMgahawa) {
-                    const ujumbeSMS = `ODA MPYA: ${qty} sahani ya ${dish}. Mteja atakuja saa ${mudaVal}. Simu: ${simuUser}. Jumla: Tsh ${jumlaBei}/-. (Kutoka Zepox App)`;
+                if (namba1) {
+                    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+                    const separator = isIos ? "," : ";";
+                    const nambaZote = `${namba1}${separator}${namba2}`;
+
                     setTimeout(() => {
-                        window.location.href = `sms:${nambaMgahawa}?body=${encodeURIComponent(ujumbeSMS)}`;
+                        // Inafungua SMS app ikiwa na namba zote na maelezo yote
+                        window.location.href = `sms:${nambaZote}?body=${encodeURIComponent(maelezoYaOda + "\n(Zepox App)")}`;
                     }, 1200);
                 }
 
-                btn.innerText = originalText;
-                btn.disabled = false;
-
             } catch (error) {
                 alert("⚠️ Tatizo la mtandao, oda haijafika. Jaribu tena.");
+            } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
