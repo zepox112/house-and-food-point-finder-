@@ -868,27 +868,33 @@
                 const namba1 = restaurantData ? (restaurantData.simu || restaurantData.Simu) : null;
                 const namba2 = "255747712469"; // Namba ya mhudumu wa pili
 
-                alert("✅ Oda imehifadhiwa!");
+               // ... (sehemu ya juu ya kodi inabaki vile vile)
 
-                if (namba1) {
-                    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-                    const separator = isIos ? "," : ";";
-                    const nambaZote = `${namba1}${separator}${namba2}`;
+        alert("✅ Oda imehifadhiwa!");
 
-                    setTimeout(() => {
-                        // Inafungua SMS app ikiwa na namba zote na maelezo yote
-                        window.location.href = `sms:${nambaZote}?body=${encodeURIComponent(maelezoYaOda + "\n(Zepox App)")}`;
-                    }, 1200);
-                }
+        if (namba1) {
+            // Badala ya kuunganisha namba, tutatuma moja baada ya nyingine
+            const ujumbeFinal = encodeURIComponent(maelezoYaOda + "\n(Zepox App)");
+            
+            // 1. Tuma kwa mhudumu wa kwanza (Namba ya mgahawa)
+            setTimeout(() => {
+                window.location.href = `sms:${namba1}?body=${ujumbeFinal}`;
+            }, 500);
 
-            } catch (error) {
-                alert("⚠️ Tatizo la mtandao, oda haijafika. Jaribu tena.");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            // 2. Tuma kwa mhudumu wa pili baada ya sekunde 2.5 (Zepox Admin)
+            // Hii inampa mteja muda wa kutuma ya kwanza kisha hii inafuata
+            setTimeout(() => {
+                window.location.href = `sms:${namba2}?body=${ujumbeFinal}`;
+            }, 3000);
         }
 
+    } catch (error) {
+        alert("⚠️ Tatizo la mtandao, oda haijafika. Jaribu tena.");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
         // 5. Utilities & Comments System Fixed
         async function submitComment(target) {
             const name = document.getElementById('c_name').value;
