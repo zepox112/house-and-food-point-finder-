@@ -460,6 +460,9 @@
             <div class="select-btn" onclick="enterApp('Food')">
                 <i class="fa fa-utensils"></i><b>FOOD POINT</b>
             </div>
+            <div class="select-btn" onclick="window.chatbase('open')" style="border: 1px solid var(--yellow);">
+                <i class="fa fa-robot"></i><b>CHAT NA AI</b>
+            </div>
         </div>
     </div>
     <div id="image-viewer">
@@ -995,6 +998,21 @@
             startAdsAnimation(totalSlides);
         }
     </script>
+    <script>
+    /**
+     * Function to open Chatbase and send a specific prompt
+     * @param {string} message - The initial request sent to the AI
+     */
+    function openAI(message) {
+        if (window.chatbase) {
+            window.chatbase('open');
+            // This sends the message automatically so the AI can start helping right away
+            window.chatbase('send', message);
+        } else {
+            console.error("Chatbase is still loading...");
+        }
+    }
+</script>
 </body>
 
 </html>
